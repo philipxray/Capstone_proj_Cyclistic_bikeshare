@@ -81,7 +81,7 @@ all_trips <- all_trips %>% mutate(season = case_when(month == "03" ~ "Spring",
 all_trips <- all_trips %>%
   mutate(
     started_at = as.POSIXct(started_at, format = "%Y-%m-%d %H:%M:%S"),
-    month = as.integer(format(started_at, "%m")),  # now works fine
+    month = as.integer(format(started_at, "%m")),  
     season = case_when(
       month %in% 3:5  ~ "Spring",
       month %in% 6:8  ~ "Summer",
@@ -91,6 +91,7 @@ all_trips <- all_trips %>%
   )                      
 
 #create a column for the month using the full month name
+
 all_trips <- all_trips %>% mutate(month = 
                                               case_when(month == "1" ~ "January",
                                                         month == "2" ~ "February",
@@ -105,6 +106,7 @@ all_trips <- all_trips %>% mutate(month =
                                                         month == "11" ~ "November",
                                                         month == "12" ~ "December"))
 #Clean NA values
+
 sum(is.na(all_trips_v2))        # total number of NA values
 colSums(is.na(all_trips_v2))    # NA count per column
 all_trips <- na.omit(all_trips)
@@ -116,7 +118,8 @@ all_trips <- all_trips %>%
   ) %>%
   
   # Create ride_length in minutes
-  mutate(
+  
+mutate(
     ride_length = as.numeric(difftime(ended_at, started_at, units = "mins"))
   ) 
 
@@ -126,9 +129,11 @@ is.numeric(all_trips_v2$ride_length)
 
 
 # Remove any NA rows (clean dataset)
-  drop_na(all_trips)
+ 
+drop_na(all_trips)
 
 # Save ready-to-use dataset for Tableau
+
 all_trips_v2 <- all_trips
 write.csv(all_trips_v2,
           "C:/Users/Phili/Documents/Data Analytics Course/all_trips_clean.csv",
