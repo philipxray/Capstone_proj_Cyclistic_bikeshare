@@ -1,1 +1,135 @@
 
+# Renamed files for brevity
+file.rename(from = "Data Analytics Course/202407-divvy-tripdata.csv", to = "Data Analytics Course/202407-tripdata.csv")
+
+files <- list.files()
+print(files)
+list.files("Data Analytics Course")
+files <- list.files("Data Analytics Course", 
+                    pattern = "divvy-tripdata.csv", 
+                    full.names = TRUE)
+
+new_names <- gsub("divvy-", "", files)
+
+data.frame(old = files, new = new_names)
+
+file.rename(from = files, to = new_names)
+# install.packages("dplyr")
+db1 <- read.csv("202508-tripdata.csv")
+db2 <- read.csv("202507-tripdata.csv")
+db3 <-read.csv("202506-tripdata.csv")
+db4 <-read.csv("202505-tripdata.csv")
+db5 <-read.csv("202504-tripdata.csv")
+db6 <-read.csv("202503-tripdata.csv")
+db7 <-read.csv("202502-tripdata.csv")
+db8 <-read.csv("202501-tripdata.csv")
+db9 <-read.csv("202412-tripdata.csv")
+db10 <-read.csv("202411-tripdata.csv")
+db11 <-read.csv("202410-tripdata.csv")
+db12 <-read.csv("202409-tripdata.csv")
+db_list <- list(db1, db2, db3, db4, db5, db6, db7, db8, db9, db10, db11, db12)
+#apply to new names to each file
+lapply(db_list, colnames)
+#check dataframe structure
+str(db_list)
+#combine/ bind all files
+all_trips <-bind_rows(db_list)
+#remove extra files 
+rm(db1, db2, db3, db4, db5, db6, db7, db8, db9, db10, db11, db12)
+rm(db_list)
+
+
+all_trips %>%
+  summarise(n_stations = n_distinct(start_station_name))
+write.csv(all_trips, "all_trips.csv", row.names = FALSE)
+# Remove lat and long
+all_trips <- all_trips %>% select(-c(start_lat, start_lng, end_lat, end_lng))
+colnames(all_trips)
+
+#Number of rows in the all_trips data frame
+nrow(all_trips)
+dim(all_trips)
+#
+all_trips$time <- format(as.POSIXct(all_trips$started_at), "%H:%M:%S")
+#Here are POSIXct functions to handle objects of the "POSIXlt" and "POSIXct" classes that represent calendar dates and times. 
+#Thus, we can assign the time data to the time column.
+all_trips$hour <- format(as.POSIXct(all_trips$started_at), "%H")
+#create column for different time_of_day: Night, Morning, Afternoon, Evening
+
+all_trips <- all_trips %>%
+  mutate(hour = hour(started_at),
+         time_of_day = case_when(
+           hour >= 0  & hour < 6  ~ "Night",
+           hour >= 6  & hour < 12 ~ "Morning",
+           hour >= 12 & hour < 18 ~ "Afternoon",
+           hour >= 18 & hour < 24 ~ "Evening"
+         ))
+
+all_trips <- all_trips %>% mutate(season = case_when(month == "03" ~ "Spring",
+                                                     month == "04" ~ "Spring",
+                                                     month == "05" ~ "Spring",
+                                                     month == "06"  ~ "Summer",
+                                                     month == "07"  ~ "Summer",
+                                                     month == "08"  ~ "Summer",
+                                                     month == "09" ~ "Fall",
+                                                     month == "10" ~ "Fall",
+                                                     month == "11" ~ "Fall",
+                                                     month == "12" ~ "Winter",
+                                                     month == "01" ~ "Winter",
+                                                     month == "02" ~ "Winter"))
+
+all_trips <- all_trips %>%
+  mutate(
+    started_at = as.POSIXct(started_at, format = "%Y-%m-%d %H:%M:%S"),
+    month = as.integer(format(started_at, "%m")),  # now works fine
+    season = case_when(
+      month %in% 3:5  ~ "Spring",
+      month %in% 6:8  ~ "Summer",
+      month %in% 9:11 ~ "Fall",
+      month %in% c(12, 1, 2) ~ "Winter"
+    )
+  )                      
+
+#create a column for the month using the full month name
+all_trips <- all_trips %>% mutate(month = 
+                                              case_when(month == "1" ~ "January",
+                                                        month == "2" ~ "February",
+                                                        month == "3" ~ "March",
+                                                        month == "4" ~ "April",
+                                                        month == "5" ~ "May",
+                                                        month == "6" ~ "June",
+                                                        month == "7" ~ "July",
+                                                        month == "8" ~ "August",
+                                                        month == "9" ~ "September",
+                                                        month == "10" ~ "October",
+                                                        month == "11" ~ "November",
+                                                        month == "12" ~ "December"))
+#Clean NA values
+sum(is.na(all_trips_v2))        # total number of NA values
+colSums(is.na(all_trips_v2))    # NA count per column
+all_trips <- na.omit(all_trips)
+all_trips <- distinct(all_trips)
+all_trips <- all_trips %>%
+  mutate(
+    started_at = as.POSIXct(started_at, format = "%Y-%m-%d %H:%M:%S"),
+    ended_at   = as.POSIXct(ended_at, format = "%Y-%m-%d %H:%M:%S")
+  ) %>%
+  
+  # Create ride_length in minutes
+  mutate(
+    ride_length = as.numeric(difftime(ended_at, started_at, units = "mins"))
+  ) 
+
+is.factor(all_trips_v2$ride_length)
+all_trips_v2$ride_length <- as.numeric(as.character(all_trips_v2$ride_length))
+is.numeric(all_trips_v2$ride_length)
+
+
+# Remove any NA rows (clean dataset)
+  drop_na(all_trips)
+
+# Save ready-to-use dataset for Tableau
+all_trips_v2 <- all_trips
+write.csv(all_trips_v2,
+          "C:/Users/Phili/Documents/Data Analytics Course/all_trips_clean.csv",
+          row.names = FALSE)
